@@ -11,6 +11,9 @@ public class Character : MonoBehaviour
     [Range(5, 30f)]
     [SerializeField]
     private float jumpForce = 10f;
+    [Range(1, 10)]
+    [SerializeField]
+    private float gravityScale = 1f;
 
     [Space]
     [Header("hook mechanic")]
@@ -20,6 +23,8 @@ public class Character : MonoBehaviour
     [Range(1, 50)]
     [SerializeField]
     private float launchSpeed = 10f;
+    [SerializeField]
+    private Transform hookTransform;
 
     [Space]
     [Header("other objects")]
@@ -30,7 +35,10 @@ public class Character : MonoBehaviour
     [SerializeField]
     private Transform hitPoint;
 
+    private Collision2D colobject;
+
     private bool launching = false;
+    private bool dead = false;
     private bool fromLaunch = false;
 
     //overige
@@ -39,23 +47,52 @@ public class Character : MonoBehaviour
     private bool canClimb = false;
     private bool inAir = true;
 
+    private Vector3 spawnPos;
+
+    private CameraFade cameraFade;
+    private CameraShake cameraShake;
 
     void Start()
     {
+        cameraFade = Transform.FindObjectOfType<CameraFade>();
+        cameraShake = cameraFade.GetComponent<CameraShake>();
+
         //declaring the rigidbody
         rb = GetComponent<Rigidbody2D>();
         lr = GetComponent<LineRenderer>();
-        lr.enabled = false;
+        spawnPos = transform.position;
+
+        DisPatchHook();
+
     }
 
     void Update()
     {
+        if (Time.timeScale == 0) { return; }
+
+        if (Input.GetButtonUp("Fire1"))
+        {
+            DisPatchHook();
+        }
+
         //if it launches forward, ignore all other input / should probably be implemented inside the functions.
-        if (launching) { return; }
+        if (launching || dead) { return; }
 
 
         //inputs, need to be from a seperate input handeler.
-        Walking(Input.GetAxis("Horizontal"));
+        int h_input = 0;
+        if (Input.GetKey(KeyCode.A))
+        {
+            h_input = -1;
+        } else if(Input.GetKey(KeyCode.D))
+        {
+            h_input = 1;
+        }
+        Walking(h_input);
+        //Walking(Input.GetAxis("Horizontal"));
+
+
+        //jump
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Jump();
@@ -69,6 +106,12 @@ public class Character : MonoBehaviour
         if (Input.GetButtonDown("Fire1"))
         {
             LaungeToHook();
+        }
+
+        //pause
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            GameManager.instance.Pause(true);
         }
     }
 
@@ -101,14 +144,26 @@ public class Character : MonoBehaviour
         if (collision.gameObject.tag == "wall")
         {
             CancelJump(false);
-        }
+        } else if (collision.gameObject.tag == "spike")
+        {
+            Death();
+        } 
+        colobject = collision;
     }
 
     void OnCollisionExit2D(Collision2D collision)
     {
         canClimb = false;
-        rb.gravityScale = 1;
+        rb.gravityScale = gravityScale;
         inAir = true;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "checkpoint")
+        {
+            spawnPos = collision.transform.position;
+        }
     }
 
     /// <summary>
@@ -117,11 +172,34 @@ public class Character : MonoBehaviour
     /// <param name="h_input"></param>
     public void Walking(float h_input)
     {
-        if (fromLaunch) { return; }
-
         //rb.x gets updated.
         Vector3 tempRb = rb.velocity;
-        tempRb.x = h_input * walkSpeed;
+        float friction = inAir ? 0.4f : .8f;
+        tempRb.x += h_input * ( 2* friction);
+
+        if (!fromLaunch)
+        {
+            tempRb.x = Mathf.Min(Mathf.Max(tempRb.x, -walkSpeed), walkSpeed);
+        }
+
+        if (h_input == 0)
+        {
+            if (tempRb.x > 0)
+            {
+                tempRb.x -= friction;
+            }
+            else
+            {
+                tempRb.x += friction;
+            }
+                
+        }
+
+        if (Mathf.Abs(tempRb.x) < friction * 2)
+        {
+            fromLaunch = false;
+            tempRb.x = 0;
+        }
         rb.velocity = tempRb;
     }
 
@@ -134,6 +212,15 @@ public class Character : MonoBehaviour
 
         Vector3 tempRb = rb.velocity;
         tempRb.y = jumpForce;
+        if (canClimb)
+        {
+            tempRb.x = walkSpeed;
+
+            if (colobject.transform.position.x > transform.position.x)
+            {
+                tempRb.x *= -1;
+            } 
+        }
         rb.velocity = tempRb;
     }
 
@@ -190,6 +277,7 @@ public class Character : MonoBehaviour
         if (launching || !hitPoint.gameObject.activeSelf) { return; }
 
         launching = true;
+        ParticleManager.instance.SpawnParticle(ParticleManager.instance.landImpactParticle, hitPoint.position, hitPoint.rotation);
         StartCoroutine(LaunchingToHook());
     }
     /// <summary>
@@ -200,8 +288,10 @@ public class Character : MonoBehaviour
     IEnumerator LaunchingToHook()
     {
         lr.enabled = true;
-        while (Vector3.Distance(hitPoint.position, castPoint.position) > .5f)
+        while (Vector3.Distance(hitPoint.position, castPoint.position) > .5f && launching)
         {
+            hookTransform.position = hitPoint.position - castPoint.position.normalized * 0.2f;
+
             lr.SetPosition(0, castPoint.position);
             lr.SetPosition(1, hitPoint.position);
 
@@ -209,12 +299,41 @@ public class Character : MonoBehaviour
             rb.velocity = Vector3.Normalize(hitPoint.position - transform.position) * launchSpeed;
             yield return new WaitForFixedUpdate();
         }
+        DisPatchHook();
+    }
+    private void DisPatchHook()
+    {
+        StopCoroutine(LaunchingToHook());
+
+        hookTransform.position = castPoint.position;
+
         lr.enabled = false;
 
         launching = false;
         fromLaunch = true;
-        rb.gravityScale = 1;
+        rb.gravityScale = gravityScale;
+    }
+    public void Death()
+    {
+        ParticleManager.instance.SpawnParticle(ParticleManager.instance.deathParticle, transform.position, transform.rotation);
+
+        dead = true;
+        GameManager.instance.RespawnPlayerAfterTime(0.5f);
+        gameObject.SetActive(false);
+
+        //StartCoroutine(Respawning());
+    }
+    //public IEnumerator Respawning()
+    //{
+    //    yield return new WaitForSeconds(0.3f);
+    //    Respawn();
+    //}
+    public void Respawn()
+    {
+        dead = false;
+
+        this.transform.position = spawnPos;
+        cameraFade.fadingOut = false;
 
     }
-    
 }
