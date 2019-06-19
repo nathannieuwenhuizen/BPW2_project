@@ -175,6 +175,25 @@ public class Character : MonoBehaviour
         {
             GameManager.instance.Finished();
         }
+        if (collision.gameObject.tag == "platform")
+        {
+           if (rb.velocity.y < 0)
+            {
+                rb.velocity = new Vector2(rb.velocity.x, 0f);
+                fromLaunch = false;
+                inAir = false;
+                rb.gravityScale = 0;
+            }
+        }
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "platform")
+        {
+            canClimb = false;
+            inAir = true;
+            rb.gravityScale = gravityScale;
+        }
     }
 
     /// <summary>

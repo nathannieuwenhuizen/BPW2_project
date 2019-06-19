@@ -9,6 +9,7 @@ TagManager:
   - checkpoint
   - ungrabable
   - finish
+  - platform
   layers:
   - Default
   - TransparentFX
