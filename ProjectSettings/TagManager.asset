@@ -7,6 +7,8 @@ TagManager:
   - wall
   - spike
   - checkpoint
+  - ungrabable
+  - finish
   layers:
   - Default
   - TransparentFX

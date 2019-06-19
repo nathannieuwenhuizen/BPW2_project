@@ -80,24 +80,24 @@ public class Character : MonoBehaviour
 
 
         //inputs, need to be from a seperate input handeler.
-        int h_input = 0;
-        if (Input.GetKey(KeyCode.A))
+        float h_input = 0;
+
+        if (Input.GetButton("Left"))
         {
             h_input = -1;
-        } else if(Input.GetKey(KeyCode.D))
+        } else if(Input.GetButton("Right"))
         {
             h_input = 1;
         }
         Walking(h_input);
-        //Walking(Input.GetAxis("Horizontal"));
 
 
         //jump
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space))
         {
             Jump();
         }
-        else if (Input.GetKeyUp(KeyCode.Space))
+        else if (Input.GetButtonUp("Jump") || Input.GetKeyUp(KeyCode.Space))
         {
             CancelJump();
         }
@@ -132,10 +132,13 @@ public class Character : MonoBehaviour
                 CancelJump(false);
             }
         }
-
-        //needs to be aplied later not earlier.
-        fromLaunch = false;
-        inAir = false;
+        if (collision.gameObject.tag != "ungrabable")
+        {
+            Debug.Log("can jump!");
+            //needs to be aplied later not earlier.
+            fromLaunch = false;
+            inAir = false;
+        }
 
     }
 
@@ -160,9 +163,13 @@ public class Character : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "checkpoint")
+        if (collision.gameObject.GetComponent<Checkpoint>())
         {
-            spawnPos = collision.transform.position;
+            if (!collision.gameObject.GetComponent<Checkpoint>().Check)
+            {
+                spawnPos = collision.transform.position;
+                GameManager.instance.SetCheckPoint(collision.gameObject.GetComponent<Checkpoint>());
+            }
         }
     }
 
@@ -177,7 +184,29 @@ public class Character : MonoBehaviour
         float friction = inAir ? 0.4f : .8f;
         tempRb.x += h_input * ( 2* friction);
 
-        if (!fromLaunch)
+        if (tempRb.x < 0)
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+            aimPivot.localScale = new Vector3(-1, 1, 1);
+
+        }
+        else if (tempRb.x > 0) {
+            transform.localScale = new Vector3(1, 1, 1);
+            aimPivot.localScale = new Vector3(1, 1, 1);
+
+        }
+        if (fromLaunch)
+        {
+            if (h_input < 0 && tempRb.x < -walkSpeed)
+            {
+                tempRb.x -= h_input * (2 * friction);
+
+            }
+            else if (h_input > 0 && tempRb.x > walkSpeed)
+            {
+                tempRb.x -= h_input * (2 * friction);
+            }
+        } else
         {
             tempRb.x = Mathf.Min(Mathf.Max(tempRb.x, -walkSpeed), walkSpeed);
         }
@@ -260,8 +289,14 @@ public class Character : MonoBehaviour
         //probably needs a tweak that it doesnt get spikes or other things.
         if (hit.collider != null)
         {
-            hitPoint.gameObject.SetActive(true);
-            hitPoint.position = hit.point;
+            if (hit.collider.gameObject.tag != "spike" && hit.collider.gameObject.tag != "ungrabable")
+            {
+                hitPoint.gameObject.SetActive(true);
+                hitPoint.position = hit.point;
+            } else
+            {
+                hitPoint.gameObject.SetActive(false);
+            }
         } else
         {
             hitPoint.gameObject.SetActive(false);
@@ -278,6 +313,8 @@ public class Character : MonoBehaviour
 
         launching = true;
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.landImpactParticle, hitPoint.position, hitPoint.rotation);
+        ParticleManager.instance.SpawnParticle(ParticleManager.instance.characterJumpParticle, transform.position, transform.rotation);
+
         StartCoroutine(LaunchingToHook());
     }
     /// <summary>
@@ -292,9 +329,8 @@ public class Character : MonoBehaviour
         {
             hookTransform.position = hitPoint.position - castPoint.position.normalized * 0.2f;
 
-            lr.SetPosition(0, castPoint.position);
-            lr.SetPosition(1, hitPoint.position);
-
+            lr.SetPosition(1, castPoint.position);
+            lr.SetPosition(0, hitPoint.position);
             rb.gravityScale = 0;
             rb.velocity = Vector3.Normalize(hitPoint.position - transform.position) * launchSpeed;
             yield return new WaitForFixedUpdate();
@@ -304,6 +340,7 @@ public class Character : MonoBehaviour
     private void DisPatchHook()
     {
         StopCoroutine(LaunchingToHook());
+
 
         hookTransform.position = castPoint.position;
 

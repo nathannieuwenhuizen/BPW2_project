@@ -5,6 +5,7 @@ public class ParticleManager : MonoBehaviour
     [Header("Character particles")]
     public ParticleGroup deathParticle;
     public ParticleGroup landImpactParticle;
+    public ParticleGroup characterJumpParticle;
 
     public static ParticleManager instance;
     void Awake()
@@ -13,6 +14,7 @@ public class ParticleManager : MonoBehaviour
 
         InitiatePool(deathParticle);
         InitiatePool(landImpactParticle);
+        InitiatePool(characterJumpParticle);
 
     }
     public void InitiatePool(ParticleGroup particle)

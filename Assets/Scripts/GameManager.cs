@@ -13,6 +13,8 @@ public class GameManager : MonoBehaviour
     private GameObject pauseMenu;
 
     public static GameManager instance;
+
+    private Checkpoint[] checkPoints;
     // Start is called before the first frame update
     void Awake()
     {
@@ -23,6 +25,7 @@ public class GameManager : MonoBehaviour
         character = FindObjectOfType<Character>();
         cameraFade = FindObjectOfType<CameraFade>();
         cameraShake = cameraFade.GetComponent<CameraShake>();
+        checkPoints = FindObjectsOfType<Checkpoint>();
     }
 
     public void RespawnPlayerAfterTime(float duration)
@@ -40,6 +43,14 @@ public class GameManager : MonoBehaviour
         character.Respawn();
     }
 
+    public void SetCheckPoint(Checkpoint checkpoint)
+    {
+        foreach(Checkpoint cp in checkPoints)
+        {
+            cp.Check = false;
+        }
+        checkpoint.Check = true;
+    }
     public void Pause(bool pause)
     {
         Time.timeScale = pause ? 0f : 1f;
