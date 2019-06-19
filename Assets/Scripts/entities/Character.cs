@@ -171,6 +171,10 @@ public class Character : MonoBehaviour
                 GameManager.instance.SetCheckPoint(collision.gameObject.GetComponent<Checkpoint>());
             }
         }
+        if (collision.gameObject.tag == "finish")
+        {
+            GameManager.instance.Finished();
+        }
     }
 
     /// <summary>

@@ -12,6 +12,9 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private GameObject pauseMenu;
 
+    [SerializeField]
+    private GameObject finishMenu;
+
     public static GameManager instance;
 
     private Checkpoint[] checkPoints;
@@ -26,6 +29,8 @@ public class GameManager : MonoBehaviour
         cameraFade = FindObjectOfType<CameraFade>();
         cameraShake = cameraFade.GetComponent<CameraShake>();
         checkPoints = FindObjectsOfType<Checkpoint>();
+
+        Pause(false);
     }
 
     public void RespawnPlayerAfterTime(float duration)
@@ -53,16 +58,26 @@ public class GameManager : MonoBehaviour
     }
     public void Pause(bool pause)
     {
+        if (finishMenu.activeSelf)
+        {
+            return;
+        }
+
         Time.timeScale = pause ? 0f : 1f;
         pauseMenu.SetActive(pause);
     }
 
-    public void GoToMenu()
+    public void GoToScene(int number)
     {
         Pause(false);
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(number);
     }
+    public void Finished()
+    {
+        finishMenu.SetActive(true);
+        character.enabled = false;
 
+    }
     // Update is called once per frame
     void Update()
     {
