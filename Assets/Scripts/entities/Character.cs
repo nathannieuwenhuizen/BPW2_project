@@ -334,6 +334,7 @@ public class Character : MonoBehaviour
         //if it already launches and the hitobject is active, meaning there is a point to go to.
         if (launching || !hitPoint.gameObject.activeSelf) { return; }
 
+        Debug.Log("bug?");
         launching = true;
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.landImpactParticle, hitPoint.position, hitPoint.rotation);
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.characterJumpParticle, transform.position, transform.rotation);
@@ -363,7 +364,10 @@ public class Character : MonoBehaviour
     private void DisPatchHook()
     {
         StopCoroutine(LaunchingToHook());
-
+        if (!launching)
+        {
+            return;
+        }
 
         hookTransform.position = castPoint.position;
 
@@ -396,4 +400,10 @@ public class Character : MonoBehaviour
         cameraFade.fadingOut = false;
 
     }
+    private void OnDrawGizmos()
+    {
+        UnityEditor.Handles.color = Color.black;
+        UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, rayCastDistance);
+    }
+
 }
