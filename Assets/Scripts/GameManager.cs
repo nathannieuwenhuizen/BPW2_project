@@ -18,6 +18,12 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
 
     private Checkpoint[] checkPoints;
+
+    [SerializeField]
+    private Stopwatch stopWatch;
+    [SerializeField]
+    private GameObject newHighscore;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -31,6 +37,8 @@ public class GameManager : MonoBehaviour
         checkPoints = FindObjectsOfType<Checkpoint>();
 
         Pause(false);
+
+        stopWatch.gameObject.SetActive(true);
     }
 
     public void RespawnPlayerAfterTime(float duration)
@@ -76,7 +84,24 @@ public class GameManager : MonoBehaviour
     {
         finishMenu.SetActive(true);
         character.enabled = false;
+        stopWatch.paused = true;
+        stopWatch.ShowText();
+        float levelNumber = SceneManager.GetActiveScene().buildIndex;
 
+        if (PlayerPrefs.GetFloat("level" + levelNumber) == 0)
+        {
+            UpdateHighscore(levelNumber);
+        }
+
+        if (stopWatch.value < PlayerPrefs.GetFloat("level" + levelNumber))
+        {
+            UpdateHighscore(levelNumber);
+        }
+    }
+    void UpdateHighscore(float levelNumber)
+    {
+        PlayerPrefs.SetFloat("level" + levelNumber, stopWatch.value);
+        newHighscore.SetActive(true);
     }
     // Update is called once per frame
     void Update()

@@ -7,6 +7,7 @@ public class Checkpoint : MonoBehaviour
 
     private ParticleSystem ps;
     private SpriteRenderer sr;
+    private AudioSource audio;
     private bool check;
 
     [SerializeField]
@@ -18,6 +19,7 @@ public class Checkpoint : MonoBehaviour
     {
         ps = GetComponent<ParticleSystem>();
         sr = GetComponent<SpriteRenderer>();
+        audio = GetComponent<AudioSource>();
     }
 
     public bool Check
@@ -29,6 +31,7 @@ public class Checkpoint : MonoBehaviour
             if (check)
             {
                 ps.Play();
+                audio.Play();
             }
         }
     }

@@ -232,6 +232,12 @@ MonoBehaviour:
   aimPivot: {fileID: 3344121174047345227}
   castPoint: {fileID: 3344121173667831321}
   hitPoint: {fileID: 0}
+  jumpSound: {fileID: 8300000, guid: eac4633fb7f44074dbb609c502360e37, type: 3}
+  deathSound: {fileID: 8300000, guid: ac086f8abecd7cb4b8dcd6623dc2d5cf, type: 3}
+  wooshSound: {fileID: 8300000, guid: 760bc453565f0c349a609e8250a90878, type: 3}
+  cancelWooshSound: {fileID: 8300000, guid: ea2138d7df247ca48855707b065e9745, type: 3}
+  woodhitSound: {fileID: 8300000, guid: c57849b1e14acc941a75ebcbae97c252, type: 3}
+  landHitSound: {fileID: 8300000, guid: 0de0ee5e01faefc4fb55a472ad2f5cc7, type: 3}
 --- !u!120 &2068298199
 LineRenderer:
   m_ObjectHideFlags: 0

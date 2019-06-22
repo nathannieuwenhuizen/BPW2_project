@@ -52,6 +52,24 @@ public class Character : MonoBehaviour
     private CameraFade cameraFade;
     private CameraShake cameraShake;
 
+    [Space]
+    [Header("audioclips")]
+    [SerializeField]
+    private AudioClip jumpSound;
+    [SerializeField]
+    private AudioClip wooshSound;
+    [SerializeField]
+    private AudioClip cancelWooshSound;
+    [SerializeField]
+    private AudioClip woodhitSound;
+    [SerializeField]
+    private AudioClip landHitSound;
+
+    private AudioSource jumpSource;
+    private AudioSource wooshSource;
+    private AudioSource woodHitSource;
+    private AudioSource landHitSource;
+
     void Start()
     {
         cameraFade = Transform.FindObjectOfType<CameraFade>();
@@ -61,6 +79,12 @@ public class Character : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         lr = GetComponent<LineRenderer>();
         spawnPos = transform.position;
+
+        //audio sources
+        jumpSource = gameObject.AddComponent<AudioSource>();
+        wooshSource = gameObject.AddComponent<AudioSource>();
+        woodHitSource = gameObject.AddComponent<AudioSource>();
+        landHitSource = gameObject.AddComponent<AudioSource>();
 
         DisPatchHook();
 
@@ -134,8 +158,6 @@ public class Character : MonoBehaviour
         }
         if (collision.gameObject.tag != "ungrabable")
         {
-            Debug.Log("can jump!");
-            //needs to be aplied later not earlier.
             fromLaunch = false;
             inAir = false;
         }
@@ -147,10 +169,16 @@ public class Character : MonoBehaviour
         if (collision.gameObject.tag == "wall")
         {
             CancelJump(false);
-        } else if (collision.gameObject.tag == "spike")
+            PlaySound(woodHitSource, woodhitSound);
+
+        }
+        else if (collision.gameObject.tag == "spike")
         {
             Death();
-        } 
+        } else
+        {
+            PlaySound(landHitSource, landHitSound, 0.2f);
+        }
         colobject = collision;
     }
 
@@ -174,11 +202,14 @@ public class Character : MonoBehaviour
         if (collision.gameObject.tag == "finish")
         {
             GameManager.instance.Finished();
+            rb.velocity = Vector3.zero;
         }
         if (collision.gameObject.tag == "platform")
         {
            if (rb.velocity.y < 0)
             {
+                PlaySound(landHitSource, landHitSound, 0.2f);
+
                 rb.velocity = new Vector2(rb.velocity.x, 0f);
                 fromLaunch = false;
                 inAir = false;
@@ -262,6 +293,8 @@ public class Character : MonoBehaviour
     {
         if (inAir) { return; }
 
+        PlaySound(jumpSource, jumpSound);
+
         Vector3 tempRb = rb.velocity;
         tempRb.y = jumpForce;
         if (canClimb)
@@ -334,7 +367,8 @@ public class Character : MonoBehaviour
         //if it already launches and the hitobject is active, meaning there is a point to go to.
         if (launching || !hitPoint.gameObject.activeSelf) { return; }
 
-        Debug.Log("bug?");
+        PlaySound(wooshSource, wooshSound);
+
         launching = true;
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.landImpactParticle, hitPoint.position, hitPoint.rotation);
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.characterJumpParticle, transform.position, transform.rotation);
@@ -369,6 +403,8 @@ public class Character : MonoBehaviour
             return;
         }
 
+        PlaySound(woodHitSource, cancelWooshSound, 0.2f);
+
         hookTransform.position = castPoint.position;
 
         lr.enabled = false;
@@ -379,6 +415,7 @@ public class Character : MonoBehaviour
     }
     public void Death()
     {
+        rb.gravityScale = gravityScale;
         ParticleManager.instance.SpawnParticle(ParticleManager.instance.deathParticle, transform.position, transform.rotation);
 
         dead = true;
@@ -405,5 +442,11 @@ public class Character : MonoBehaviour
         UnityEditor.Handles.color = Color.black;
         UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, rayCastDistance);
     }
-
+    private void PlaySound(AudioSource source, AudioClip clip, float volume = 1f) 
+    {
+        //if (source.isPlaying) { return; }
+        source.volume = volume;
+        source.clip = clip;
+        source.Play();
+    }
 }
