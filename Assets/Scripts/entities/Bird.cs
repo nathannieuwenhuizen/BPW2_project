@@ -58,7 +58,7 @@ public class Bird : MonoBehaviour
         if (CheckPlayerInRange(panicRange))
         {
             panicDirection = transform.position - player.position;
-            panicDirection.y = Mathf.Abs(panicDirection.y * Random.value * 5f);
+            panicDirection.y = Mathf.Abs(panicDirection.y) + Random.value * 5f;
             panicDirection = panicDirection.normalized * speed;
 
             StartCoroutine(WaitForDisapear());
