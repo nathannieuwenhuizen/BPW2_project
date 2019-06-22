@@ -49,10 +49,10 @@ public class MovingSpike : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        UnityEditor.Handles.color = Color.red;
+        //UnityEditor.Handles.color = Color.red;
         for(int i = 0; i < points.Count; i++)
         {
-            UnityEditor.Handles.DrawSolidDisc(points[i].position, Vector3.back, 0.5f);
+            //UnityEditor.Handles.DrawSolidDisc(points[i].position, Vector3.back, 0.5f);
             if ( i < points.Count - 1)
             {
                 Debug.DrawLine(points[i].position, points[i + 1].position);

@@ -31,8 +31,15 @@ public class Stopwatch : MonoBehaviour
     }
     public void ShowText()
     {
-        secondText.text = value.ToString().Split(',')[0] + '.';
-        miliSecondText.text = value.ToString().Split(',')[1].Substring(0, 3);
+        if (value.ToString().Contains("."))
+        {
+            secondText.text = Mathf.Floor(value / 1000).ToString();
+            miliSecondText.text = value.ToString().Split('.')[1].Substring(0, 3);
+        } else
+        {
+            secondText.text = Mathf.Floor(value / 1000).ToString();
+            miliSecondText.text = value.ToString().Split(',')[1].Substring(0, 3);
+        }
 
     }
 }

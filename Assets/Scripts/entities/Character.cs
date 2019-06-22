@@ -439,8 +439,8 @@ public class Character : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        UnityEditor.Handles.color = Color.black;
-        UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, rayCastDistance);
+        //UnityEditor.Handles.color = Color.black;
+        //UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, rayCastDistance);
     }
     private void PlaySound(AudioSource source, AudioClip clip, float volume = 1f) 
     {

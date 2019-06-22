@@ -97,7 +97,7 @@ public class Bird : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        UnityEditor.Handles.color = Color.yellow;
-        UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, panicRange);
+        //UnityEditor.Handles.color = Color.yellow;
+        //UnityEditor.Handles.DrawWireDisc(transform.position, Vector3.back, panicRange);
     }
 }
